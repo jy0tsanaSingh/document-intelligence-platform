@@ -1,34 +1,23 @@
-from fastapi import APIRouter, HTTPException, Depends
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.db.session import get_db
-from app.models.document_model import Document
-from .document_schema import DocumentUploadRequest, DocumentResponse
-import base64, os
+from app.schemas.document_schema import DocumentCreate, DocumentResponse
+from app.services.document_service import create_document, list_documents
 
 router = APIRouter(prefix="/documents", tags=["Documents"])
-UPLOAD_DIR = "uploads"
+
 
 @router.post("/", response_model=DocumentResponse)
-def upload_document(request: DocumentUploadRequest, db: Session = Depends(get_db)):
-    os.makedirs(UPLOAD_DIR, exist_ok=True)
-    file_path = os.path.join(UPLOAD_DIR, request.filename)
-    
-    # Save file locally
-    try:
-        with open(file_path, "wb") as f:
-            f.write(base64.b64decode(request.content))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to save file: {str(e)}")
-    
-    # Save metadata to DB
-    db_doc = Document(
-        filename=request.filename,
-        filetype=request.filetype,
-        filepath=file_path,
-        metadata=str(request.metadata) if request.metadata else None
-    )
-    db.add(db_doc)
-    db.commit()
-    db.refresh(db_doc)
-    
-    return db_doc
+async def create_document_api(
+    payload: DocumentCreate,
+    db: AsyncSession = Depends(get_db),
+):
+    return await create_document(db, payload)
+
+
+@router.get("/", response_model=list[DocumentResponse])
+async def list_documents_api(
+    db: AsyncSession = Depends(get_db),
+):
+    return await list_documents(db)
