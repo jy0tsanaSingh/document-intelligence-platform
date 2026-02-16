@@ -5,14 +5,15 @@ from datetime import datetime
 
 class DocumentCreate(BaseModel):
     filename: str
-    filetype: str
-    metadata: Optional[dict] = None
 
 
 class DocumentResponse(BaseModel):
     id: str
     filename: str
-    filetype: str
-    filepath: str
-    metadata: Optional[str] = None
-    created_at: Optional[datetime] = None
+    status: str
+    extracted_data: Optional[dict] = None
+    uploaded_at: Optional[datetime] = None
+    processed_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True

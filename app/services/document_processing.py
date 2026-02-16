@@ -2,7 +2,8 @@ from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.models.document_model import Document, DocumentStatus
+from app.models.document_model import Document
+from app.ai.graph import build_document_graph
 
 
 async def process_document(
@@ -17,16 +18,33 @@ async def process_document(
     if not document:
         raise ValueError("Document not found")
 
-    # Move to PROCESSING
-    document.status = DocumentStatus.PROCESSING.value
-    await db.commit()
+    try:
+        # mark processing
+        document.status = "processing"
+        await db.commit()
 
-    # ---- Simulated processing ----
+        graph = build_document_graph()
 
-    document.status = DocumentStatus.PROCESSED.value
-    document.processed_at = datetime.utcnow()
+        final_state = graph.invoke(
+            {
+                "document_id": document.id,
+                "filename": document.filename,
+            }
+        )
 
-    await db.commit()
-    await db.refresh(document)
+        document.extracted_data = final_state.get("extracted_data")
+        document.status = "processed"
+        document.processed_at = datetime.utcnow()
 
-    return document
+        await db.commit()
+        await db.refresh(document)
+
+        return document
+
+    except Exception as e:
+   
+        document.status = "failed"
+        await db.commit()
+
+        print("PIPELINE ERROR:", str(e))  # shows real reason in terminal
+        raise

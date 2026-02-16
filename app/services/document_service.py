@@ -9,17 +9,17 @@ async def create_document(
     db: AsyncSession,
     payload: DocumentCreate,
 ) -> Document:
-    new_doc = Document(
+    document = Document(
         filename=payload.filename,
-        filetype=payload.filetype,
-        metadata=str(payload.metadata) if payload.metadata else None,
+        status="uploaded",
     )
 
-    db.add(new_doc)
-    await db.commit()
-    await db.refresh(new_doc)
+    db.add(document)
 
-    return new_doc
+    await db.commit()
+    await db.refresh(document)
+
+    return document
 
 
 async def list_documents(db: AsyncSession):
