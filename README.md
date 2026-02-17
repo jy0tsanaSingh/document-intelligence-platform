@@ -1,128 +1,129 @@
-# Document Intelligence Platform
+📄 Document Intelligence Platform
 
-An AI-powered backend system for extracting structured intelligence from unstructured documents using FastAPI and LangGraph-based orchestration.
+A production-style AI document processing backend built with FastAPI and LangGraph, designed to handle validation, retries, and explicit failure states instead of blindly trusting LLM output.
 
-## Overview
+🏗️ Architecture
+Streamlit UI
+    ↓
+FastAPI API
+    ↓
+Service Layer
+    ↓
+LangGraph Workflow
+    ├── Extract
+    ├── Parse (LLM)
+    ├── Validate
+    ├── Retry (max 2)
+    └── Success / Failure
+    ↓
+PostgreSQL
 
-This project demonstrates a production-style AI backend that:
+🧠 Why LangGraph?
 
-- Accepts document metadata via REST APIs
-- Persists document lifecycle state
-- Runs a multi-step AI workflow
-- Handles validation, retries, and failure states deterministically
-- Stores structured extraction results
+The document pipeline is modeled as a state machine rather than a linear chain.
 
-The system emphasizes robustness, state management, and clean architecture.
+LangGraph enables:
 
----
+Deterministic state transitions
 
-## Architecture
+Conditional retries
 
-Client (Swagger / Streamlit)
-        ↓
-FastAPI (Async APIs)
-        ↓
-Service Layer (Business Logic)
-        ↓
-LangGraph (Workflow Orchestration)
-        ↓
-LLM (OpenAI)
-        ↓
-PostgreSQL (Async SQLAlchemy)
+Explicit terminal states
 
-Each layer has a single responsibility to ensure maintainability and extensibility.
+Safer AI orchestration
 
----
+This avoids common failure modes in AI systems where LLM output is assumed to be correct.
 
-## AI Workflow
+🔄 Processing Flow
 
-The document processing workflow is orchestrated using LangGraph:
+Extract document text (simulated, easily replaceable)
 
-START  
-  ↓  
-Extract  
-  ↓  
-Validate  
-  ↓  
-Valid?  
-  ├── Yes → Processed  
-  └── No → Retry (limited attempts)  
-               ↓  
-            Still invalid?  
-               └── Mark Failed  
+Run LLM extraction
 
-This deterministic flow models real-world AI processing systems.
+Parse structured output
 
----
+Validate required fields
 
-## Tech Stack
+Retry on failure (max 2 attempts)
 
-Backend:
-- FastAPI (async REST APIs)
-- SQLAlchemy (async ORM)
-- PostgreSQL
+Mark document as processed or failed
 
-AI:
-- OpenAI API
-- LangGraph (workflow orchestration)
+🛡️ Failure Handling
 
-Client:
-- Swagger (OpenAPI)
-- Streamlit (demo UI)
+LLM output is validated before persistence
 
----
+Retries are bounded and deterministic
 
-## Project Structure
+Invalid documents are explicitly marked as failed
 
-app/
-├── api/        # FastAPI routes  
-├── services/   # Business logic  
-├── ai/         # LangGraph workflow  
-├── models/     # SQLAlchemy models  
-├── schemas/    # Pydantic schemas  
-├── db/         # Database session  
-└── main.py     # Application entry point  
+No partial or unsafe data is stored
 
----
+📦 API Endpoints
+Create Document
+POST /documents
 
-## How to Run
+{ "filename": "sample.pdf" }
 
-1. Create virtual environment
+Process Document
+POST /documents/{id}/process
 
-python -m venv env  
-source env/bin/activate  
 
-2. Install dependencies
+Returns:
 
-pip install -r requirements.txt  
+{
+  "id": "...",
+  "status": "processed | failed",
+  "extracted_data": {...}
+}
 
-3. Set environment variables
+▶️ Running the Project
+Start API
+python -m uvicorn app.main:app --reload
 
-export OPENAI_API_KEY="your-api-key"
 
-4. Run FastAPI
+Swagger:
 
-python -m uvicorn app.main:app --reload  
+http://127.0.0.1:8000/docs
 
-5. (Optional) Run Streamlit
+Start UI
+streamlit run streamlit_app/app.py
 
-streamlit run streamlit_app/app.py  
+🧪 Retry Behavior
 
----
+Validation failure triggers retry
 
-## API Access
+Max retry limit enforced
 
-Swagger UI:  
-http://localhost:8000/docs
+Terminal states are deterministic
 
-Main endpoints:
-- POST /documents
-- GET /documents
-- POST /documents/{id}/process
+🏆 What This Project Demonstrates
 
----
+LangGraph-based AI orchestration
 
-## Notes
+Production-style retry patterns
 
-This project is intended as a demonstration of structured AI workflow orchestration.  
-LLM outputs should always be validated before use in production-critical systems.
+Explicit failure handling
+
+Clean backend layering
+
+End-to-end integration (API + UI)
+
+🔮 Extensibility
+
+The architecture supports:
+
+Real PDF parsing
+
+Background processing
+
+Human review workflows
+
+Observability and tracing
+
+## 👩‍💻 Author
+
+Jyotsana Singh  
+Backend & AI Systems Engineering  
+
+LinkedIn: https://www.linkedin.com/in/jyotsana-singh-46b33791/
+
