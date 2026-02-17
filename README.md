@@ -1,60 +1,44 @@
 📄 Document Intelligence Platform
 
-A production-style AI document processing backend built with FastAPI and LangGraph, designed to handle validation, retries, and explicit failure states instead of blindly trusting LLM output.
+A production-style AI document processing system built with FastAPI and LangGraph, designed to safely orchestrate LLM workflows using validation, retries, and explicit failure states.
 
-🏗️ Architecture
-Streamlit UI
-    ↓
-FastAPI API
-    ↓
-Service Layer
-    ↓
-LangGraph Workflow
-    ├── Extract
-    ├── Parse (LLM)
-    ├── Validate
-    ├── Retry (max 2)
-    └── Success / Failure
-    ↓
-PostgreSQL
+🏗️ Architecture (One-Line)
 
-🧠 Why LangGraph?
+Streamlit UI → FastAPI → Service Layer → LangGraph (state machine) → PostgreSQL
 
-The document pipeline is modeled as a state machine rather than a linear chain.
+🧠 Core Idea
 
-LangGraph enables:
+This project treats AI document processing as a deterministic state machine, not a single prompt call.
 
-Deterministic state transitions
+Instead of trusting LLM output blindly, the system:
 
-Conditional retries
+Validates structured results
 
-Explicit terminal states
+Retries on failure (bounded)
 
-Safer AI orchestration
+Ends in explicit terminal states (processed / failed)
 
-This avoids common failure modes in AI systems where LLM output is assumed to be correct.
+🔄 Processing Workflow
 
-🔄 Processing Flow
+Extract document text (simulated, pluggable)
 
-Extract document text (simulated, easily replaceable)
+Run LLM-based structured extraction
 
-Run LLM extraction
-
-Parse structured output
+Parse JSON output
 
 Validate required fields
 
-Retry on failure (max 2 attempts)
+Retry extraction (max 2 attempts)
 
-Mark document as processed or failed
+Persist final state
 
-🛡️ Failure Handling
+🛡️ Failure & Retry Strategy
 
-LLM output is validated before persistence
+Validation layer guards against malformed LLM output
 
-Retries are bounded and deterministic
+Retry logic is deterministic and bounded
 
-Invalid documents are explicitly marked as failed
+Failed documents are explicitly marked and persisted
 
 No partial or unsafe data is stored
 
@@ -62,13 +46,15 @@ No partial or unsafe data is stored
 Create Document
 POST /documents
 
-{ "filename": "sample.pdf" }
+{
+  "filename": "sample.pdf"
+}
 
 Process Document
 POST /documents/{id}/process
 
 
-Returns:
+Response:
 
 {
   "id": "...",
@@ -77,7 +63,7 @@ Returns:
 }
 
 ▶️ Running the Project
-Start API
+Start Backend
 python -m uvicorn app.main:app --reload
 
 
@@ -88,42 +74,33 @@ http://127.0.0.1:8000/docs
 Start UI
 streamlit run streamlit_app/app.py
 
-🧪 Retry Behavior
-
-Validation failure triggers retry
-
-Max retry limit enforced
-
-Terminal states are deterministic
-
 🏆 What This Project Demonstrates
 
 LangGraph-based AI orchestration
 
-Production-style retry patterns
+Production-style retry and failure handling
 
-Explicit failure handling
+Deterministic AI workflows
 
-Clean backend layering
+Clean separation of API, service, and orchestration layers
 
-End-to-end integration (API + UI)
+End-to-end system design (UI → DB)
 
-🔮 Extensibility
+🔮 Designed for Extension
 
-The architecture supports:
+The architecture cleanly supports:
 
 Real PDF parsing
 
-Background processing
+Background async processing
 
 Human review workflows
 
 Observability and tracing
 
-## 👩‍💻 Author
+👩‍💻 Author
 
-Jyotsana Singh  
-Backend & AI Systems Engineering  
+Jyotsana Singh
+Backend & AI Systems Engineering
 
-LinkedIn: https://www.linkedin.com/in/jyotsana-singh-46b33791/
-
+🔗 LinkedIn: https://www.linkedin.com/in/jyotsana-singh-46b33791/
