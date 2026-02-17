@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+pydantic
+pydantic-settings
+sqlalchemy
+aiosqlite
+streamlit
+requests
+langchain
+langgraph
+openai
+asyncpg
+psycopg2-binary
+greenlet
+

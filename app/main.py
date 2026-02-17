@@ -1,13 +1,19 @@
 from fastapi import FastAPI
-from app.db.session import Base, engine
-from app.api.v1 import document_routes
-from app.api.v1 import health
+from app.db.session import engine
+from app.db.base import Base
+from app.api.v1.document_routes import router as document_router
 
-app = FastAPI(title="Document Intelligence Platform")
+app = FastAPI()
 
-# Create tables automatically (dev only)
-Base.metadata.create_all(bind=engine)
 
-# Include routes
-app.include_router(health.router, prefix="/health", tags=["Health"])
-app.include_router(document_routes.router, prefix="/api/v1", tags=["Documents"])
+@app.on_event("startup")
+async def on_startup():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+
+app.include_router(
+    document_router,
+    prefix="/documents",
+    tags=["Documents"],
+)
