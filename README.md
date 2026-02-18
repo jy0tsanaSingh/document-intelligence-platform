@@ -146,7 +146,11 @@ Observability and tracing
 
 👩‍💻 Author
 
-Jyotsana Singh
-Backend & AI Systems Engineering
+Built by a senior software engineer and current iOS Lead with 10+ years of production experience, now expanding into backend Python and applied AI systems.
+This project reflects a practical approach to AI:
+Not hype-driven
+Not notebook-only
+Designed for real-world adoption.
 
 🔗 LinkedIn: https://www.linkedin.com/in/jyotsana-singh-46b33791/
+
