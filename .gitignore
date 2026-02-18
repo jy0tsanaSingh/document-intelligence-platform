@@ -1,0 +1,36 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# ---- Virtual Environments ----
+env/
+venv/
+.venv/
+
+# ---- Environment Variables ----
+.env
+
+# ---- IDE / OS ----
+.vscode/
+.idea/
+.DS_Store
+
+# ---- Logs ----
+*.log
+
+# ---- Database ----
+*.sqlite3
+
+# ---- Streamlit ----
+.streamlit/
+
+# ---- Uploads ----
+uploads/
+
+# ---- Build ----
+dist/
+build/
+*.egg-info/
