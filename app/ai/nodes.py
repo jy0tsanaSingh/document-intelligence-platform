@@ -60,17 +60,25 @@ def llm_extract_node(state: Dict) -> Dict:
 def parse_json_node(state: Dict) -> Dict:
     """
     Parses LLM output into JSON safely.
+    Strips markdown code fences before parsing.
     """
-
     try:
-        state["extracted_data"] = json.loads(state.get("raw_output", "{}"))
+        raw = state.get("raw_output", "{}")
+        
+        # Strip markdown code fences OpenAI wraps around JSON
+        raw = raw.strip()
+        if raw.startswith("```"):
+            raw = raw.split("```")[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
+        
+        state["extracted_data"] = json.loads(raw.strip())
     except Exception:
         state["extracted_data"] = {
             "title": None,
             "summary": None,
             "keywords": [],
         }
-
     return state
 
 
