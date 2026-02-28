@@ -2,7 +2,8 @@ from typing import Dict
 from openai import OpenAI
 import os
 import json
-
+from dotenv import load_dotenv
+load_dotenv()
 
 MAX_RETRIES = 2
 
@@ -17,55 +18,40 @@ def extract_text_node(state: Dict) -> Dict:
 
 
 def llm_extract_node(state: Dict) -> Dict:
-    """
-    Calls OpenAI to extract structured data.
-    """
-
     api_key = os.getenv("OPENAI_API_KEY")
-
+    
     if not api_key:
         state["error"] = "OPENAI_API_KEY not set"
         state["validation_passed"] = False
         return state
-
     try:
         client = OpenAI(api_key=api_key)
-
         prompt = f"""
         Extract structured information from the text below.
         Return strictly valid JSON with keys:
         - title (string)
         - summary (string)
         - keywords (array of strings)
-
         TEXT:
         {state['text']}
         """
-
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[{"role": "user", "content": prompt}],
             temperature=0,
         )
-
         state["raw_output"] = response.choices[0].message.content
-
+        
     except Exception as e:
         state["error"] = str(e)
         state["validation_passed"] = False
-
     return state
 
 
 def parse_json_node(state: Dict) -> Dict:
-    """
-    Parses LLM output into JSON safely.
-    Strips markdown code fences before parsing.
-    """
     try:
         raw = state.get("raw_output", "{}")
-        
-        # Strip markdown code fences OpenAI wraps around JSON
+        # DEBUG
         raw = raw.strip()
         if raw.startswith("```"):
             raw = raw.split("```")[1]
@@ -73,7 +59,7 @@ def parse_json_node(state: Dict) -> Dict:
                 raw = raw[4:]
         
         state["extracted_data"] = json.loads(raw.strip())
-    except Exception:
+    except Exception as e:
         state["extracted_data"] = {
             "title": None,
             "summary": None,
