@@ -19,14 +19,14 @@ async def process_document(
         raise ValueError("Document not found")
 
     try:
-        # 1️⃣ Mark as processing
+        # Step 1 — Mark as processing
         document.status = "processing"
         await db.commit()
 
-        graph = build_document_graph()
+        # Step 2 — Build and run LangGraph pipeline
+        pipeline = build_document_graph()
 
-        # 2️⃣ IMPORTANT: initialize full state
-        final_state = graph.invoke(
+        final_state = pipeline.invoke(
             {
                 "document_id": document.id,
                 "filename": document.filename,
@@ -36,10 +36,10 @@ async def process_document(
             }
         )
 
-        # 3️⃣ Save extracted data
+        # Step 3 — Save extracted data
         document.extracted_data = final_state.get("extracted_data")
 
-        # 4️⃣ Determine final status
+        # Step 4 — Determine final status
         if final_state.get("validation_passed"):
             document.status = "processed"
         else:
@@ -53,9 +53,7 @@ async def process_document(
         return document
 
     except Exception as e:
-        # Hard failure (unexpected crash)
         document.status = "failed"
+        document.processed_at = datetime.utcnow()
         await db.commit()
-
-        print("PIPELINE ERROR:", str(e))
         raise
